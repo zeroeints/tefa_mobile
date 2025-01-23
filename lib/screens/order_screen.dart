@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
 
 class OrderScreen extends StatefulWidget {
   @override
@@ -14,7 +15,7 @@ class _OrderScreenState extends State<OrderScreen> {
   final TextEditingController _projectNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  String? _selectedTypeId;
+  List<String> _selectedTypeIds = [];
   List<Map<String, dynamic>> _projectTypes = [];
 
   @override
@@ -47,7 +48,7 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Future<void> _submitOrder() async {
-    if (_formKey.currentState!.validate() && _selectedTypeId != null) {
+    if (_formKey.currentState!.validate() && _selectedTypeIds.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
       if (token == null) return;
@@ -61,7 +62,7 @@ class _OrderScreenState extends State<OrderScreen> {
         body: jsonEncode({
           'judul': _projectNameController.text.trim(),
           'description': _descriptionController.text.trim(),
-          'type': [_selectedTypeId],
+          'type': _selectedTypeIds,  // Mengirim daftar ID tipe proyek
         }),
       );
 
@@ -74,10 +75,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 SizedBox(width: 12),
                 Text(
                   'Order Berhasil',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -100,16 +98,12 @@ class _OrderScreenState extends State<OrderScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
+                Icon(Icons.error, color: Colors.white),
                 SizedBox(width: 12),
                 Text(
                   'Gagal Membuat Order',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -138,7 +132,6 @@ class _OrderScreenState extends State<OrderScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        // elevation: 4,
         title: Row(
           children: [
             ClipOval(
@@ -171,27 +164,7 @@ class _OrderScreenState extends State<OrderScreen> {
               _buildTextField(
                   _projectNameController, 'Nama Proyek', Icons.work_outline),
               SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color.fromARGB(255, 255, 255, 255),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: const Color.fromARGB(0, 0, 0, 0)),
-                  ),
-                ),
-                items: _projectTypes.map((type) {
-                  return DropdownMenuItem(
-                    value: type['id_type'].toString(),
-                    child: Text(type['type']),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedTypeId = value);
-                },
-                hint: Text("Pilih tipe proyek"),
-              ),
+              _buildMultiSelectType(),
               SizedBox(height: 12),
               _buildTextField(_descriptionController, 'Deskripsi',
                   Icons.description_outlined,
@@ -202,10 +175,9 @@ class _OrderScreenState extends State<OrderScreen> {
                   onPressed: _submitOrder,
                   style: ElevatedButton.styleFrom(
                     shape: StadiumBorder(),
-                    side: BorderSide(
-                        color: Colors.blue.shade900), // Ubah warna border
+                    side: BorderSide(color: Colors.blue.shade900),
                     backgroundColor: Color(0xFF002147),
-                    foregroundColor: Colors.white, // Warna teks tombol
+                    foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 12, horizontal: 50),
                   ),
                   child: Text("Kirim",
@@ -219,23 +191,53 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildTextField(
-      TextEditingController controller, String hint, IconData icon,
-      {int maxLines = 1}) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: const Color.fromARGB(255, 255, 255, 255),
-        prefixIcon: Icon(icon, color: Color.fromARGB(255, 10, 0, 40)),
-        hintText: hint,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: const Color.fromARGB(0, 0, 0, 0)),
-        ),
+ Widget _buildTextField(
+    TextEditingController controller, String hint, IconData icon,
+    {int maxLines = 1}) {
+  return TextFormField(
+    controller: controller,
+    maxLines: maxLines,
+    decoration: InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      prefixIcon: Icon(icon, color: Color(0xFF0A0028)),
+      hintText: hint,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey, width: 1), // Border abu-abu
       ),
-      validator: (value) => value!.isEmpty ? "$hint tidak boleh kosong" : null,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey, width: 1), // Saat tidak aktif
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.blue, width: 2), // Saat aktif
+      ),
+      contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+    ),
+    validator: (value) => value!.isEmpty ? "$hint tidak boleh kosong" : null,
+  );
+}
+
+  Widget _buildMultiSelectType() {
+    return MultiSelectDialogField(
+      items: _projectTypes.map((type) {
+        return MultiSelectItem<String>(type['id_type'].toString(), type['type']);
+      }).toList(),
+      title: Text("Pilih tipe proyek"),
+      selectedColor: Colors.blue,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey),
+      ),
+      buttonIcon: Icon(Icons.arrow_drop_down),
+      buttonText: Text("Pilih tipe proyek"),
+      onConfirm: (values) {
+        setState(() {
+          _selectedTypeIds = values.cast<String>();
+        });
+      },
     );
   }
 }
