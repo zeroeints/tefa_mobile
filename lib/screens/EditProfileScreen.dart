@@ -15,6 +15,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _telpController = TextEditingController();
   File? _selectedImage;
   bool _isLoading = false;
+  bool _withoutProfile = false;
 
   @override
   void initState() {
@@ -60,6 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
+        _withoutProfile = false;  // Reset checkbox
       });
     }
   }
@@ -88,8 +90,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['username'] = _usernameController.text;
       request.fields['telp'] = _telpController.text;
+      request.fields['default'] = _withoutProfile ? 'true' : 'false';
 
-      if (_selectedImage != null) {
+      if (_selectedImage != null && !_withoutProfile) {
         request.files.add(
           await http.MultipartFile.fromPath('photo', _selectedImage!.path),
         );
@@ -137,6 +140,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     : AssetImage('assets/images/user-1.jpg') as ImageProvider,
                 child: Icon(Icons.camera_alt, size: 30, color: Colors.white70),
               ),
+            ),
+            SizedBox(height: 10),
+            CheckboxListTile(
+              title: Text("Tanpa Profile"),
+              value: _withoutProfile,
+              onChanged: (bool? value) {
+                setState(() {
+                  _withoutProfile = value ?? false;
+                  if (_withoutProfile) _selectedImage = null;
+                });
+              },
             ),
             SizedBox(height: 20),
             TextField(
