@@ -6,10 +6,10 @@ import 'dart:convert';
 
 // ignore: must_be_immutable
 class HomeScreen extends StatelessWidget {
-  final List<String> imageUrls = [
-    "https://cdn.dribbble.com/users/49932/screenshots/14501012/media/a9af3729a9ad329d4bb5a34a1622d9f6.png",
-    "https://cdn.dribbble.com/userupload/16042277/file/original-e602785bf649c6ddec1c388fcf776921.png",
-    "https://cdn.dribbble.com/userupload/10378941/file/original-da2e6066dca5a8ce8ce9a177a812a755.png",
+  final List<String> imagePaths = [
+    "assets/images/WhatsApp Image 2025-01-24 at 09.27.00.jpeg",
+    "assets/images/WhatsApp Image 2025-01-24 at 09.27.35.jpeg",
+    "assets/images/WhatsApp Image 2025-01-24 at 09.28.29.jpeg",
   ];
 
   final TextEditingController _messageController = TextEditingController();
@@ -191,13 +191,13 @@ class HomeScreen extends StatelessWidget {
                       viewportFraction: 1.0,
                       enlargeCenterPage: true,
                     ),
-                    items: imageUrls.map((url) {
+                    items: imagePaths.map((path) {
                       return Builder(
                         builder: (BuildContext context) {
                           return ClipRRect(
                             borderRadius: BorderRadius.circular(8.0),
-                            child: Image.network(
-                              url,
+                             child: Image.asset(
+                              path,
                               fit: BoxFit.cover,
                               width: double.infinity,
                             ),
@@ -433,22 +433,19 @@ List<Widget> _buildServiceItems(BuildContext context) {
       "title": "Website",
       "description":
           "Kami menciptakan situs web untuk bisnis Anda yang pastinya terpercaya dan terjamin kualitasnya.",
-      "image":
-          "https://cdn.dribbble.com/users/49932/screenshots/14501012/media/a9af3729a9ad329d4bb5a34a1622d9f6.png",
+      "image": "assets/images/WhatsApp Image 2025-01-24 at 09.29.45.jpeg",
     },
     {
       "title": "Mobile Apps",
       "description":
           "Kami menciptakan aplikasi mobile untuk bisnis Anda yang pastinya terpercaya dan terjamin kualitasnya.",
-      "image":
-          "https://cdn.dribbble.com/userupload/10378941/file/original-da2e6066dca5a8ce8ce9a177a812a755.png",
+      "image": "assets/images/WhatsApp Image 2025-01-24 at 09.29.56.jpeg",
     },
     {
       "title": "Desktop Apps",
       "description":
           "Kami menciptakan aplikasi desktop untuk bisnis Anda yang pastinya terpercaya dan terjamin kualitasnya.",
-      "image":
-          "https://cdn.dribbble.com/userupload/10378941/file/original-da2e6066dca5a8ce8ce9a177a812a755.png",
+      "image": "assets/images/WhatsApp Image 2025-01-24 at 09.30.09.jpeg",
     },
   ];
 
@@ -460,10 +457,10 @@ List<Widget> _buildServiceItems(BuildContext context) {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Image
+            // Gambar di sisi kiri jika bukan "Mobile Apps"
             if (isImageFirst) _buildImage(service["image"]!),
 
-            // Text
+            // Teks
             Flexible(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -487,7 +484,7 @@ List<Widget> _buildServiceItems(BuildContext context) {
               ),
             ),
 
-            // Image (if it's the second column)
+            // Gambar di sisi kanan jika "Mobile Apps"
             if (!isImageFirst) _buildImage(service["image"]!),
           ],
         ),
@@ -497,19 +494,20 @@ List<Widget> _buildServiceItems(BuildContext context) {
   }).toList();
 }
 
-Widget _buildImage(String imageUrl) {
-  return Flexible(
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        width: 200,
-        height: 200,
-      ),
+// Fungsi untuk membangun widget gambar dari lokal
+Widget _buildImage(String imagePath) {
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(8.0),
+    child: Image.asset(
+      imagePath,
+      fit: BoxFit.cover,
+      width: 150,  // Sesuaikan ukuran gambar
+      height: 150,
     ),
   );
 }
+
+
 
 class FeatureCard extends StatelessWidget {
   final String title;
